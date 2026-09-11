@@ -1,7 +1,11 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+} from "react-router-dom";
 
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute";
 
 import Home from "./pages/Home";
 import Products from "./pages/Products";
@@ -10,6 +14,7 @@ import Register from "./pages/Register";
 import Cart from "./pages/Cart";
 import Wishlist from "./pages/Wishlist";
 import Checkout from "./pages/Checkout";
+import Admin from "./pages/Admin";
 
 const router = createBrowserRouter([
   {
@@ -47,6 +52,16 @@ const router = createBrowserRouter([
           {
             path: "checkout",
             element: <Checkout />,
+          },
+        ],
+      },
+
+      {
+        element: <AdminRoute />,
+        children: [
+          {
+            path: "admin",
+            element: <Admin />,
           },
         ],
       },
