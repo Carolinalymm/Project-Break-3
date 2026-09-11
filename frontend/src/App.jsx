@@ -1,43 +1,53 @@
-import { useEffect, useState } from "react";
-import api from "./api/api";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+
+import Layout from "./components/Layout";
+import Home from "./pages/Home";
+import Products from "./pages/Products";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Cart from "./pages/Cart";
+import Wishlist from "./pages/Wishlist";
+import Checkout from "./pages/Checkout";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Layout />,
+    children: [
+      {
+        index: true,
+        element: <Home />,
+      },
+      {
+        path: "products",
+        element: <Products />,
+      },
+      {
+        path: "login",
+        element: <Login />,
+      },
+      {
+        path: "register",
+        element: <Register />,
+      },
+      {
+        path: "cart",
+        element: <Cart />,
+      },
+      {
+        path: "wishlist",
+        element: <Wishlist />,
+      },
+      {
+        path: "checkout",
+        element: <Checkout />,
+      },
+    ],
+  },
+]);
 
 function App() {
-  const [products, setProducts] = useState([]);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const getProducts = async () => {
-      try {
-        const response = await api.get("/api/products");
-
-        console.log("Respuesta productos:", response.data);
-
-        setProducts(response.data.data.products);
-      } catch (error) {
-        console.error(error);
-        setError("No se pudieron cargar los productos");
-      }
-    };
-
-    getProducts();
-  }, []);
-
-  return (
-    <main>
-      <h1>Project Break 3</h1>
-
-      {error && <p>{error}</p>}
-
-      <p>Productos encontrados: {products.length}</p>
-
-      {products.map((product) => (
-        <div key={product.id}>
-          <h2>{product.name}</h2>
-          <p>{product.price} €</p>
-        </div>
-      ))}
-    </main>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;
