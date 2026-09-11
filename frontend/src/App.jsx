@@ -1,6 +1,8 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import Layout from "./components/Layout";
+import ProtectedRoute from "./components/ProtectedRoute";
+
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import Login from "./pages/Login";
@@ -30,17 +32,23 @@ const router = createBrowserRouter([
         path: "register",
         element: <Register />,
       },
+
       {
-        path: "cart",
-        element: <Cart />,
-      },
-      {
-        path: "wishlist",
-        element: <Wishlist />,
-      },
-      {
-        path: "checkout",
-        element: <Checkout />,
+        element: <ProtectedRoute />,
+        children: [
+          {
+            path: "wishlist",
+            element: <Wishlist />,
+          },
+          {
+            path: "cart",
+            element: <Cart />,
+          },
+          {
+            path: "checkout",
+            element: <Checkout />,
+          },
+        ],
       },
     ],
   },

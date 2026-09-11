@@ -42,6 +42,7 @@ export const getCurrentUser = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await api.get("/api/me");
+
       return response.data.data.user;
     } catch (error) {
       return rejectWithValue(getErrorMessage(error));
@@ -63,11 +64,13 @@ export const logoutUser = createAsyncThunk(
 const initialState = {
   user: null,
   loading: false,
+  checkingSession: true,
   error: null,
 };
 
 const authSlice = createSlice({
   name: "auth",
+
   initialState,
 
   reducers: {
@@ -78,6 +81,7 @@ const authSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
+      // REGISTER
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -91,6 +95,7 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
 
+      // LOGIN
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -104,15 +109,23 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
 
+      // COMPROBAR SESIÓN
+      .addCase(getCurrentUser.pending, (state) => {
+        state.checkingSession = true;
+      })
       .addCase(getCurrentUser.fulfilled, (state, action) => {
         state.user = action.payload;
+        state.checkingSession = false;
       })
       .addCase(getCurrentUser.rejected, (state) => {
         state.user = null;
+        state.checkingSession = false;
       })
 
+      // LOGOUT
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
+        state.checkingSession = false;
       });
   },
 });
