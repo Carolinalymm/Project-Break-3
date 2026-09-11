@@ -24,12 +24,16 @@ function Admin() {
   const [updatingProduct, setUpdatingProduct] =
     useState(false);
 
+  const [deletingProductId, setDeletingProductId] =
+    useState(null);
+
   const [editingProduct, setEditingProduct] =
     useState(null);
 
   const [error, setError] = useState("");
   const [formError, setFormError] = useState("");
   const [editError, setEditError] = useState("");
+  const [deleteError, setDeleteError] = useState("");
   const [message, setMessage] = useState("");
 
   const [formKey, setFormKey] = useState(0);
@@ -104,6 +108,7 @@ function Admin() {
   const handleStartEdit = (product) => {
     setEditingProduct(product);
     setEditError("");
+    setDeleteError("");
     setMessage("");
   };
 
@@ -157,6 +162,54 @@ function Admin() {
     }
   };
 
+  const handleDeleteProduct = async (
+    product
+  ) => {
+    const confirmed = window.confirm(
+      `¿Seguro que quieres eliminar "${product.name}"?`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeletingProductId(product.id);
+      setDeleteError("");
+      setMessage("");
+
+      await api.delete(
+        `/api/products/${product.id}`
+      );
+
+      setProducts((previous) =>
+        previous.filter(
+          (currentProduct) =>
+            currentProduct.id !== product.id
+        )
+      );
+
+      if (
+        editingProduct?.id === product.id
+      ) {
+        setEditingProduct(null);
+      }
+
+      setMessage(
+        `${product.name} se ha eliminado correctamente`
+      );
+    } catch (error) {
+      console.error(error);
+
+      setDeleteError(
+        error.response?.data?.error ||
+          "No se pudo eliminar el producto"
+      );
+    } finally {
+      setDeletingProductId(null);
+    }
+  };
+
   return (
     <section>
       <h1>
@@ -169,6 +222,10 @@ function Admin() {
       </p>
 
       {message && <p>{message}</p>}
+
+      {deleteError && (
+        <p>{deleteError}</p>
+      )}
 
       <section>
         <h2>Crear producto</h2>
@@ -274,6 +331,10 @@ function Admin() {
                     onClick={() =>
                       handleStartEdit(product)
                     }
+                    disabled={
+                      deletingProductId ===
+                      product.id
+                    }
                   >
                     Editar
                   </button>
@@ -282,9 +343,18 @@ function Admin() {
 
                   <button
                     type="button"
-                    disabled
+                    onClick={() =>
+                      handleDeleteProduct(product)
+                    }
+                    disabled={
+                      deletingProductId ===
+                      product.id
+                    }
                   >
-                    Eliminar
+                    {deletingProductId ===
+                    product.id
+                      ? "Eliminando..."
+                      : "Eliminar"}
                   </button>
                 </article>
               ))
