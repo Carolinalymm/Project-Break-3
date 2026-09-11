@@ -15,20 +15,46 @@ import orderRoutes from "./routes/order.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
 import notFound from "./middlewares/notFound.js";
 import errorHandler from "./middlewares/errorHandler.js";
-import {
-  sendSuccess,
-} from "./utils/apiResponse.js";
+import { sendSuccess } from "./utils/apiResponse.js";
 
 const app = express();
 
 app.set("trust proxy", 1);
 
 app.disable("x-powered-by");
+
+// Orígenes permitidos para peticiones desde el frontend.
+// FRONTEND_URLS permite indicar varios separados por comas.
+// FRONTEND_URL se mantiene por compatibilidad con la configuración anterior.
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.FRONTEND_URL,
+  ...(process.env.FRONTEND_URLS
+    ? process.env.FRONTEND_URLS.split(",")
+    : []),
+]
+  .filter(Boolean)
+  .map((origin) => origin.trim());
+
 app.use(
   cors({
-    origin:
-      process.env.FRONTEND_URL ||
-      "http://localhost:5173",
+    origin: (origin, callback) => {
+      // Permite peticiones que no vienen de un navegador,
+      // como Swagger, curl o herramientas de desarrollo.
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(
+        new Error(
+          `Origen no permitido por CORS: ${origin}`,
+        ),
+      );
+    },
     credentials: true,
   }),
 );
@@ -44,10 +70,7 @@ app.use(
 app.use(cookieParser());
 
 app.get(
-  [
-    "/favicon.ico",
-    "/favicon.svg",
-  ],
+  ["/favicon.ico", "/favicon.svg"],
   (req, res) => {
     return res.status(204).end();
   },
@@ -55,123 +78,71 @@ app.get(
 
 app.get("/", (req, res) => {
   return sendSuccess(res, {
-    message:
-      "Bienvenida a Backend React Ready",
+    message: "Bienvenida a Backend React Ready",
     data: {
-      documentation:
-        "/api/docs",
-      openApiJson:
-        "/api/docs.json",
-      health:
-        "/api/health",
-      databaseHealth:
-        "/api/health/database",
-      mongoHealth:
-        "/api/health/mongodb",
-      register:
-        "/api/auth/register",
-      login:
-        "/api/auth/login",
-      logout:
-        "/api/auth/logout",
-      currentUser:
-        "/api/me",
-      products:
-        "/api/products",
-      productReviews:
-        "/api/products/:id/reviews",
-      reviews:
-        "/api/reviews/:reviewId",
-      wishlist:
-        "/api/wishlist",
-      cart:
-        "/api/cart",
-      cartItems:
-        "/api/cart/items",
-      checkout:
-        "/api/cart/checkout",
-      orders:
-        "/api/orders",
-      orderDetail:
-        "/api/orders/:orderId",
-      productImageUpload:
-        "/api/uploads/products",
+      documentation: "/api/docs",
+      openApiJson: "/api/docs.json",
+      health: "/api/health",
+      databaseHealth: "/api/health/database",
+      mongoHealth: "/api/health/mongodb",
+      register: "/api/auth/register",
+      login: "/api/auth/login",
+      logout: "/api/auth/logout",
+      currentUser: "/api/me",
+      products: "/api/products",
+      productReviews: "/api/products/:id/reviews",
+      reviews: "/api/reviews/:reviewId",
+      wishlist: "/api/wishlist",
+      cart: "/api/cart",
+      cartItems: "/api/cart/items",
+      checkout: "/api/cart/checkout",
+      orders: "/api/orders",
+      orderDetail: "/api/orders/:orderId",
+      productImageUpload: "/api/uploads/products",
     },
   });
 });
 
-app.get(
-  "/api/docs.json",
-  (req, res) => {
-    return res.status(200).json(
-      swaggerSpecification,
-    );
-  },
-);
+app.get("/api/docs.json", (req, res) => {
+  return res.status(200).json(swaggerSpecification);
+});
+
 app.use(
   "/api/docs",
   swaggerUi.serve,
-  swaggerUi.setup(
-    swaggerSpecification,
-    {
-      customSiteTitle:
-        "Backend React Ready API",
+  swaggerUi.setup(swaggerSpecification, {
+    customSiteTitle: "Backend React Ready API",
 
-      swaggerOptions: {
-        withCredentials: true,
-        persistAuthorization: true,
-        displayRequestDuration: true,
-        filter: true,
-        docExpansion: "none",
-      },
+    swaggerOptions: {
+      withCredentials: true,
+      persistAuthorization: true,
+      displayRequestDuration: true,
+      filter: true,
+      docExpansion: "none",
     },
-  ),
-);
-app.use(
-  "/api/health",
-  healthRoutes,
+  }),
 );
 
-app.use(
-  "/api/auth",
-  authRoutes,
-);
+app.use("/api/health", healthRoutes);
 
-app.use(
-  "/api/me",
-  meRoutes,
-);
+app.use("/api/auth", authRoutes);
 
-app.use(
-  "/api/products",
-  productRoutes,
-);
+app.use("/api/me", meRoutes);
 
-app.use(
-  "/api/reviews",
-  reviewRoutes,
-);
+app.use("/api/products", productRoutes);
 
-app.use(
-  "/api/wishlist",
-  wishlistRoutes,
-);
+app.use("/api/reviews", reviewRoutes);
 
-app.use(
-  "/api/cart",
-  cartRoutes,
-);
+app.use("/api/wishlist", wishlistRoutes);
 
-app.use(
-  "/api/orders",
-  orderRoutes,
-);
+app.use("/api/cart", cartRoutes);
 
-app.use(
-  "/api/uploads/products",
-  uploadRoutes,
-);
+app.use("/api/orders", orderRoutes);
+
+app.use("/api/uploads/products", uploadRoutes);
+
 app.use(notFound);
+
 app.use(errorHandler);
 
 export default app;
