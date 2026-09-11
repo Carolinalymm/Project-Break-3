@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+import api from "../api/api";
 
 const EMPTY_FORM = {
   name: "",
@@ -8,6 +10,14 @@ const EMPTY_FORM = {
   stock: "",
   imageUrl: "",
 };
+
+const ALLOWED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+];
+
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 function ProductForm({
   initialValues = EMPTY_FORM,
@@ -22,6 +32,13 @@ function ProductForm({
   });
 
   const [errors, setErrors] = useState({});
+  const [imageFile, setImageFile] = useState(null);
+  const [uploadingImage, setUploadingImage] =
+    useState(false);
+  const [uploadError, setUploadError] =
+    useState("");
+
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     setFormData({
@@ -30,6 +47,12 @@ function ProductForm({
     });
 
     setErrors({});
+    setImageFile(null);
+    setUploadError("");
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   }, [initialValues]);
 
   const validateForm = () => {
@@ -40,12 +63,16 @@ function ProductForm({
         "El nombre debe tener al menos 2 caracteres";
     }
 
-    if (formData.description.trim().length < 5) {
+    if (
+      formData.description.trim().length < 5
+    ) {
       newErrors.description =
         "La descripción debe tener al menos 5 caracteres";
     }
 
-    if (formData.category.trim().length < 2) {
+    if (
+      formData.category.trim().length < 2
+    ) {
       newErrors.category =
         "La categoría debe tener al menos 2 caracteres";
     }
@@ -61,35 +88,42 @@ function ProductForm({
 
     if (
       formData.stock === "" ||
-      !Number.isInteger(Number(formData.stock)) ||
+      !Number.isInteger(
+        Number(formData.stock)
+      ) ||
       Number(formData.stock) < 0
     ) {
       newErrors.stock =
         "El stock debe ser un número entero igual o superior a 0";
     }
 
-    if (formData.imageUrl.trim()) {
-      try {
-        const url = new URL(
-          formData.imageUrl.trim()
-        );
-
-        if (
-          url.protocol !== "http:" &&
-          url.protocol !== "https:"
-        ) {
-          newErrors.imageUrl =
-            "La imagen debe tener una URL válida";
-        }
-      } catch {
-        newErrors.imageUrl =
-          "La imagen debe tener una URL válida";
-      }
-    }
-
     setErrors(newErrors);
 
-    return Object.keys(newErrors).length === 0;
+    return (
+      Object.keys(newErrors).length === 0
+    );
+  };
+
+  const validateImage = (file) => {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      setUploadError(
+        "Solo se permiten imágenes JPEG, PNG o WebP"
+      );
+
+      return false;
+    }
+
+    if (file.size > MAX_IMAGE_SIZE) {
+      setUploadError(
+        "La imagen no puede superar los 5 MB"
+      );
+
+      return false;
+    }
+
+    setUploadError("");
+
+    return true;
   };
 
   const handleChange = (event) => {
@@ -108,24 +142,108 @@ function ProductForm({
     }
   };
 
+  const handleImageChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      setImageFile(null);
+      return;
+    }
+
+    if (!validateImage(file)) {
+      setImageFile(null);
+
+      event.target.value = "";
+
+      return;
+    }
+
+    setImageFile(file);
+  };
+
+  const uploadImage = async () => {
+    if (!imageFile) {
+      return formData.imageUrl;
+    }
+
+    const imageData = new FormData();
+
+    imageData.append("image", imageFile);
+
+    const response = await api.post(
+      "/api/uploads/products",
+      imageData
+    );
+
+    const uploadedImage =
+      response.data?.data?.image;
+
+    if (!uploadedImage?.url) {
+      throw new Error(
+        "El servidor no devolvió la URL de la imagen"
+      );
+    }
+
+    return uploadedImage.url;
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    setUploadError("");
 
     if (!validateForm()) {
       return;
     }
 
+    let imageUrl = formData.imageUrl;
+
+    if (imageFile) {
+      try {
+        setUploadingImage(true);
+
+        imageUrl = await uploadImage();
+
+        setFormData((previous) => ({
+          ...previous,
+          imageUrl,
+        }));
+
+        setImageFile(null);
+
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      } catch (error) {
+        console.error(error);
+
+        setUploadError(
+          error.response?.data?.error ||
+            error.message ||
+            "No se pudo subir la imagen"
+        );
+
+        return;
+      } finally {
+        setUploadingImage(false);
+      }
+    }
+
     const productData = {
       name: formData.name.trim(),
-      description: formData.description.trim(),
+      description:
+        formData.description.trim(),
       category: formData.category.trim(),
       price: Number(formData.price),
       stock: Number(formData.stock),
-      imageUrl: formData.imageUrl.trim(),
+      imageUrl,
     };
 
     await onSubmit(productData);
   };
+
+  const isSubmitting =
+    loading || uploadingImage;
 
   return (
     <form onSubmit={handleSubmit}>
@@ -223,23 +341,46 @@ function ProductForm({
       </div>
 
       <div>
-        <label htmlFor="imageUrl">
-          URL de imagen
+        <label htmlFor="image">
+          Imagen del producto
         </label>
 
         <input
-          id="imageUrl"
-          name="imageUrl"
-          type="url"
-          value={formData.imageUrl}
-          onChange={handleChange}
-          placeholder="https://..."
+          ref={fileInputRef}
+          id="image"
+          name="image"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handleImageChange}
         />
 
-        {errors.imageUrl && (
-          <p>{errors.imageUrl}</p>
+        <p>
+          JPEG, PNG o WebP. Máximo 5 MB.
+        </p>
+
+        {imageFile && (
+          <p>
+            Imagen seleccionada:{" "}
+            {imageFile.name}
+          </p>
+        )}
+
+        {uploadError && (
+          <p>{uploadError}</p>
         )}
       </div>
+
+      {formData.imageUrl && (
+        <div>
+          <p>Imagen actual:</p>
+
+          <img
+            src={formData.imageUrl}
+            alt="Vista previa del producto"
+            width="150"
+          />
+        </div>
+      )}
 
       {serverError && (
         <p>{serverError}</p>
@@ -247,11 +388,13 @@ function ProductForm({
 
       <button
         type="submit"
-        disabled={loading}
+        disabled={isSubmitting}
       >
-        {loading
-          ? "Guardando..."
-          : submitLabel}
+        {uploadingImage
+          ? "Subiendo imagen..."
+          : loading
+            ? "Guardando..."
+            : submitLabel}
       </button>
     </form>
   );
