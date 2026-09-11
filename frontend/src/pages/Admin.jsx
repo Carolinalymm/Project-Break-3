@@ -21,8 +21,15 @@ function Admin() {
   const [creatingProduct, setCreatingProduct] =
     useState(false);
 
+  const [updatingProduct, setUpdatingProduct] =
+    useState(false);
+
+  const [editingProduct, setEditingProduct] =
+    useState(null);
+
   const [error, setError] = useState("");
   const [formError, setFormError] = useState("");
+  const [editError, setEditError] = useState("");
   const [message, setMessage] = useState("");
 
   const [formKey, setFormKey] = useState(0);
@@ -94,6 +101,62 @@ function Admin() {
     }
   };
 
+  const handleStartEdit = (product) => {
+    setEditingProduct(product);
+    setEditError("");
+    setMessage("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingProduct(null);
+    setEditError("");
+  };
+
+  const handleUpdateProduct = async (
+    productData
+  ) => {
+    if (!editingProduct) {
+      return;
+    }
+
+    try {
+      setUpdatingProduct(true);
+      setEditError("");
+      setMessage("");
+
+      const response = await api.put(
+        `/api/products/${editingProduct.id}`,
+        productData
+      );
+
+      const updatedProduct =
+        response.data.data.product;
+
+      setProducts((previous) =>
+        previous.map((product) =>
+          product.id === updatedProduct.id
+            ? updatedProduct
+            : product
+        )
+      );
+
+      setMessage(
+        `${updatedProduct.name} se ha actualizado correctamente`
+      );
+
+      setEditingProduct(null);
+    } catch (error) {
+      console.error(error);
+
+      setEditError(
+        error.response?.data?.error ||
+          "No se pudo actualizar el producto"
+      );
+    } finally {
+      setUpdatingProduct(false);
+    }
+  };
+
   return (
     <section>
       <h1>
@@ -105,10 +168,10 @@ function Admin() {
         en la tienda.
       </p>
 
+      {message && <p>{message}</p>}
+
       <section>
         <h2>Crear producto</h2>
-
-        {message && <p>{message}</p>}
 
         <ProductForm
           key={formKey}
@@ -121,6 +184,41 @@ function Admin() {
       </section>
 
       <hr />
+
+      {editingProduct && (
+        <>
+          <section>
+            <h2>
+              Editar producto
+            </h2>
+
+            <p>
+              Editando:{" "}
+              <strong>
+                {editingProduct.name}
+              </strong>
+            </p>
+
+            <ProductForm
+              initialValues={editingProduct}
+              onSubmit={handleUpdateProduct}
+              submitLabel="Guardar cambios"
+              loading={updatingProduct}
+              serverError={editError}
+            />
+
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+              disabled={updatingProduct}
+            >
+              Cancelar edición
+            </button>
+          </section>
+
+          <hr />
+        </>
+      )}
 
       <section>
         <h2>Productos</h2>
@@ -173,7 +271,9 @@ function Admin() {
 
                   <button
                     type="button"
-                    disabled
+                    onClick={() =>
+                      handleStartEdit(product)
+                    }
                   >
                     Editar
                   </button>
