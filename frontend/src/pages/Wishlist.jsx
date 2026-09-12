@@ -3,16 +3,25 @@ import { Link } from "react-router-dom";
 
 import api from "../api/api";
 
-function Wishlist() {
-  const [wishlist, setWishlist] = useState({
-    items: [],
-    total: 0,
-  });
+import "./Wishlist.css";
 
-  const [loading, setLoading] = useState(true);
-  const [removingProductId, setRemovingProductId] =
-    useState(null);
-  const [error, setError] = useState("");
+function Wishlist() {
+  const [wishlist, setWishlist] =
+    useState({
+      items: [],
+      total: 0,
+    });
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [
+    removingProductId,
+    setRemovingProductId,
+  ] = useState(null);
+
+  const [error, setError] =
+    useState("");
 
   useEffect(() => {
     const getWishlist = async () => {
@@ -20,10 +29,14 @@ function Wishlist() {
         setLoading(true);
         setError("");
 
-        const response = await api.get("/api/wishlist");
+        const response =
+          await api.get(
+            "/api/wishlist"
+          );
 
         setWishlist(
-          response.data?.data?.wishlist ?? {
+          response.data?.data
+            ?.wishlist ?? {
             items: [],
             total: 0,
           }
@@ -43,17 +56,27 @@ function Wishlist() {
     getWishlist();
   }, []);
 
-  const handleRemove = async (productId) => {
+  const handleRemove = async (
+    productId
+  ) => {
     try {
-      setRemovingProductId(productId);
+      setRemovingProductId(
+        productId
+      );
+
       setError("");
 
-      await api.delete(`/api/wishlist/${productId}`);
+      await api.delete(
+        `/api/wishlist/${productId}`
+      );
 
       setWishlist((previous) => {
-        const newItems = previous.items.filter(
-          (item) => item.product.id !== productId
-        );
+        const newItems =
+          previous.items.filter(
+            (item) =>
+              item.product.id !==
+              productId
+          );
 
         return {
           items: newItems,
@@ -73,68 +96,189 @@ function Wishlist() {
   };
 
   if (loading) {
-    return <p>Cargando wishlist...</p>;
+    return (
+      <section className="wishlist-page">
+        <div className="wishlist-loading">
+          Cargando wishlist...
+        </div>
+      </section>
+    );
   }
 
   return (
-    <section>
-      <h1>Wishlist</h1>
+    <section className="wishlist-page">
+      <header className="wishlist-header">
+        <div>
+          <span className="wishlist-eyebrow">
+            Favoritos
+          </span>
 
-      {error && <p>{error}</p>}
+          <h1>Wishlist</h1>
+
+          <p>
+            Guarda aquí los productos que
+            quieras tener localizados.
+          </p>
+        </div>
+
+        {wishlist.items.length > 0 && (
+          <span className="wishlist-count">
+            {wishlist.total}{" "}
+            {wishlist.total === 1
+              ? "producto"
+              : "productos"}
+          </span>
+        )}
+      </header>
+
+      {error && (
+        <p className="error-message">
+          {error}
+        </p>
+      )}
 
       {wishlist.items.length === 0 ? (
-        <>
-          <p>Tu wishlist está vacía.</p>
-          <Link to="/products">Ver productos</Link>
-        </>
-      ) : (
-        <>
+        <div className="wishlist-empty">
+          <div className="wishlist-empty-icon">
+            ♡
+          </div>
+
+          <h2>
+            Tu wishlist está vacía
+          </h2>
+
           <p>
-            Productos guardados: {wishlist.total}
+            Añade tus productos favoritos
+            para encontrarlos fácilmente
+            más adelante.
           </p>
 
-          {wishlist.items.map((item) => {
-            const product = item.product;
+          <Link
+            to="/products"
+            className="wishlist-products-link"
+          >
+            Ver productos
+          </Link>
+        </div>
+      ) : (
+        <div className="wishlist-grid">
+          {wishlist.items.map(
+            (item) => {
+              const product =
+                item.product;
 
-            return (
-              <article key={product.id}>
-                {product.imageUrl && (
-                  <img
-                    src={product.imageUrl}
-                    alt={product.name}
-                    width="200"
-                  />
-                )}
+              const isRemoving =
+                removingProductId ===
+                product.id;
 
-                <h2>{product.name}</h2>
-
-                {product.description && (
-                  <p>{product.description}</p>
-                )}
-
-                <p>
-                  Precio: {product.price.toFixed(2)} €
-                </p>
-
-                <p>Stock: {product.stock}</p>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleRemove(product.id)
-                  }
-                  disabled={
-                    removingProductId === product.id
-                  }
+              return (
+                <article
+                  key={product.id}
+                  className="wishlist-card"
                 >
-                  {removingProductId === product.id
-                    ? "Eliminando..."
-                    : "Eliminar de wishlist"}
-                </button>
-              </article>
-            );
-          })}
-        </>
+                  <div className="wishlist-image-wrapper">
+                    {product.imageUrl ? (
+                      <img
+                        src={
+                          product.imageUrl
+                        }
+                        alt={
+                          product.name
+                        }
+                        className="wishlist-image"
+                      />
+                    ) : (
+                      <span className="wishlist-no-image">
+                        Sin imagen
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="wishlist-card-content">
+                    {product.category && (
+                      <span className="wishlist-category">
+                        {
+                          product.category
+                        }
+                      </span>
+                    )}
+
+                    <h2>
+                      {product.name}
+                    </h2>
+
+                    {product.description && (
+                      <p className="wishlist-description">
+                        {
+                          product.description
+                        }
+                      </p>
+                    )}
+
+                    <div className="wishlist-card-bottom">
+                      <div className="wishlist-price-row">
+                        <strong>
+                          {Number(
+                            product.price
+                          ).toFixed(
+                            2
+                          )}{" "}
+                          €
+                        </strong>
+
+                        <span
+                          className={
+                            product.stock <=
+                            0
+                              ? "wishlist-stock wishlist-stock-empty"
+                              : product.stock <=
+                                  5
+                                ? "wishlist-stock wishlist-stock-low"
+                                : "wishlist-stock"
+                          }
+                        >
+                          {product.stock <=
+                          0
+                            ? "Sin stock"
+                            : product.stock <=
+                                5
+                              ? `Quedan ${product.stock}`
+                              : `${product.stock} disponibles`}
+                        </span>
+                      </div>
+
+                      <div className="wishlist-actions">
+                        <Link
+                          to="/products"
+                          className="wishlist-view-link"
+                        >
+                          Ver catálogo
+                        </Link>
+
+                        <button
+                          type="button"
+                          className="wishlist-remove-button"
+                          onClick={() =>
+                            handleRemove(
+                              product.id
+                            )
+                          }
+                          disabled={
+                            isRemoving
+                          }
+                        >
+                          {isRemoving
+                            ? "Eliminando..."
+                            : "Eliminar"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              );
+            }
+          )}
+        </div>
       )}
     </section>
   );

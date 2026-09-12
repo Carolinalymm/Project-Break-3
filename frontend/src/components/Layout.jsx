@@ -28,68 +28,107 @@ function Layout() {
     await dispatch(logoutUser());
   };
 
+  const getNavLinkClass = ({
+    isActive,
+  }) =>
+    `navbar-link${
+      isActive ? " active" : ""
+    }`;
+
   return (
     <>
-      <header>
-        <nav>
-          <NavLink to="/">Inicio</NavLink>
-          {" | "}
-
-          <NavLink to="/products">
-            Productos
+      <header className="app-header">
+        <nav className="navbar">
+          <NavLink
+            to="/"
+            className="navbar-brand"
+          >
+            Project Break
           </NavLink>
-          {" | "}
 
-          <NavLink to="/wishlist">
-            Wishlist
-          </NavLink>
-          {" | "}
+          <div className="navbar-links">
+            <NavLink
+              to="/"
+              end
+              className={getNavLinkClass}
+            >
+              Inicio
+            </NavLink>
 
-          <NavLink to="/cart">
-            Carrito
-          </NavLink>
-          {" | "}
+            <NavLink
+              to="/products"
+              className={getNavLinkClass}
+            >
+              Productos
+            </NavLink>
 
-          {user?.role === "ADMIN" && (
-            <>
-              <NavLink to="/admin">
-                Admin
-              </NavLink>
-              {" | "}
-            </>
-          )}
+            {user && (
+              <>
+                <NavLink
+                  to="/wishlist"
+                  className={getNavLinkClass}
+                >
+                  Wishlist
+                </NavLink>
 
-          {!user && (
-            <>
-              <NavLink to="/login">
-                Login
-              </NavLink>
-              {" | "}
+                <NavLink
+                  to="/cart"
+                  className={getNavLinkClass}
+                >
+                  Carrito
+                </NavLink>
+              </>
+            )}
 
-              <NavLink to="/register">
-                Registro
-              </NavLink>
-            </>
-          )}
-
-          {user && (
-            <>
-              <span>
-                Hola, {user.name}
-              </span>{" "}
-
-              <button
-                type="button"
-                onClick={handleLogout}
+            {user?.role === "ADMIN" && (
+              <NavLink
+                to="/admin"
+                className={getNavLinkClass}
               >
-                Cerrar sesión
-              </button>
-            </>
-          )}
+                Administración
+              </NavLink>
+            )}
+          </div>
+
+          <div className="navbar-user">
+            {!user && (
+              <>
+                <NavLink
+                  to="/login"
+                  className={getNavLinkClass}
+                >
+                  Iniciar sesión
+                </NavLink>
+
+                <NavLink
+                  to="/register"
+                  className={getNavLinkClass}
+                >
+                  Registro
+                </NavLink>
+              </>
+            )}
+
+            {user && (
+              <>
+                <span className="navbar-user-name">
+                  Hola, {user.name}
+                </span>
+
+                <button
+                  type="button"
+                  className="button-secondary"
+                  onClick={handleLogout}
+                >
+                  Cerrar sesión
+                </button>
+              </>
+            )}
+          </div>
         </nav>
       </header>
 
-      <main>
+      <main className="app-main">
         <Outlet />
       </main>
     </>

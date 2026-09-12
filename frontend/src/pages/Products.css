@@ -1,0 +1,207 @@
+.products-page {
+    width: 100%;
+  }
+  
+  .products-header {
+    margin-bottom: 32px;
+  }
+  
+  .products-header h1 {
+    margin-bottom: 8px;
+  }
+  
+  .products-header p {
+    max-width: 650px;
+    margin-bottom: 0;
+  
+    color: var(--color-text-light);
+  }
+  
+  .products-message {
+    margin-bottom: 24px;
+  }
+  
+  .products-grid {
+    display: grid;
+  
+    grid-template-columns:
+      repeat(auto-fill, minmax(250px, 1fr));
+  
+    gap: 24px;
+  }
+  
+  .product-card {
+    margin: 0;
+    padding: 0;
+  
+    display: flex;
+    flex-direction: column;
+  
+    overflow: hidden;
+  
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-large);
+  
+    background-color: var(--color-surface);
+  
+    box-shadow: var(--shadow-small);
+  
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+  
+  .product-card:hover {
+    transform: translateY(-4px);
+  
+    box-shadow: var(--shadow-medium);
+  }
+  
+  .product-image-container {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    overflow: hidden;
+  
+    background-color: #f3f4f6;
+  }
+  
+  .product-image {
+    width: 100%;
+    height: 100%;
+  
+    object-fit: cover;
+  }
+  
+  .product-image-placeholder {
+    color: var(--color-text-light);
+    font-size: 0.9rem;
+  }
+  
+  .product-content {
+    flex: 1;
+  
+    display: flex;
+    flex-direction: column;
+  
+    padding: 20px;
+  }
+  
+  .product-category {
+    align-self: flex-start;
+  
+    margin-bottom: 12px;
+    padding: 5px 9px;
+  
+    border-radius: 999px;
+  
+    background-color: #ede9fe;
+    color: var(--color-accent);
+  
+    font-size: 0.75rem;
+    font-weight: 700;
+  
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  
+  .product-name {
+    margin-bottom: 8px;
+  
+    font-size: 1.15rem;
+    line-height: 1.3;
+  
+    color: var(--color-primary);
+  }
+  
+  .product-description {
+    margin-bottom: 18px;
+  
+    color: var(--color-text-light);
+    font-size: 0.92rem;
+  
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  
+    overflow: hidden;
+  }
+  
+  .product-info {
+    margin-top: auto;
+  }
+  
+  .product-price {
+    margin-bottom: 6px;
+  
+    font-size: 1.35rem;
+    font-weight: 800;
+  
+    color: var(--color-primary);
+  }
+  
+  .product-stock {
+    margin-bottom: 18px;
+  
+    font-size: 0.85rem;
+    font-weight: 600;
+  
+    color: var(--color-success);
+  }
+  
+  .product-stock.low-stock {
+    color: #d97706;
+  }
+  
+  .product-stock.out-of-stock {
+    color: var(--color-danger);
+  }
+  
+  .product-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  
+    gap: 10px;
+  }
+  
+  .product-actions button {
+    width: 100%;
+  }
+  
+  .product-wishlist-active {
+    border-color: #fda4af;
+  
+    background-color: #fff1f2;
+    color: #be123c;
+  }
+  
+  .product-wishlist-active:hover:not(:disabled) {
+    background-color: #ffe4e6;
+  }
+  
+  .products-empty {
+    padding: 50px 20px;
+  
+    text-align: center;
+  
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-large);
+  
+    background-color: var(--color-surface);
+  
+    color: var(--color-text-light);
+  }
+  
+  @media (max-width: 600px) {
+    .products-grid {
+      grid-template-columns: 1fr;
+    }
+  
+    .product-actions {
+      grid-template-columns: 1fr;
+    }
+  }

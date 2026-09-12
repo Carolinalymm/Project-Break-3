@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import api from "../api/api";
 import ProductForm from "../components/ProductForm";
 
+import "./Admin.css";
+
 const EMPTY_PRODUCT = {
   name: "",
   description: "",
@@ -33,7 +35,8 @@ function Admin() {
   const [error, setError] = useState("");
   const [formError, setFormError] = useState("");
   const [editError, setEditError] = useState("");
-  const [deleteError, setDeleteError] = useState("");
+  const [deleteError, setDeleteError] =
+    useState("");
   const [message, setMessage] = useState("");
 
   const [formKey, setFormKey] = useState(0);
@@ -110,6 +113,11 @@ function Admin() {
     setEditError("");
     setDeleteError("");
     setMessage("");
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   const handleCancelEdit = () => {
@@ -211,50 +219,99 @@ function Admin() {
   };
 
   return (
-    <section>
-      <h1>
-        Panel de administración
-      </h1>
+    <section className="admin-page">
+      <header className="admin-header">
+        <div>
+          <span className="admin-eyebrow">
+            Administración
+          </span>
 
-      <p>
-        Gestiona los productos disponibles
-        en la tienda.
-      </p>
+          <h1>Panel de administración</h1>
 
-      {message && <p>{message}</p>}
+          <p>
+            Crea, modifica y elimina los productos
+            disponibles en la tienda.
+          </p>
+        </div>
 
-      {deleteError && (
-        <p>{deleteError}</p>
+        <div className="admin-summary">
+          <span className="admin-summary-number">
+            {products.length}
+          </span>
+
+          <span className="admin-summary-label">
+            Productos
+          </span>
+        </div>
+      </header>
+
+      {message && (
+        <p className="success-message">
+          {message}
+        </p>
       )}
 
-      <section>
-        <h2>Crear producto</h2>
+      {deleteError && (
+        <p className="error-message">
+          {deleteError}
+        </p>
+      )}
 
-        <ProductForm
-          key={formKey}
-          initialValues={EMPTY_PRODUCT}
-          onSubmit={handleCreateProduct}
-          submitLabel="Crear producto"
-          loading={creatingProduct}
-          serverError={formError}
-        />
-      </section>
+      <div
+        className={
+          editingProduct
+            ? "admin-form-layout admin-form-layout-editing"
+            : "admin-form-layout"
+        }
+      >
+        <section className="admin-panel">
+          <div className="admin-panel-header">
+            <div>
+              <span className="admin-panel-kicker">
+                Nuevo
+              </span>
 
-      <hr />
+              <h2>Crear producto</h2>
+            </div>
+          </div>
 
-      {editingProduct && (
-        <>
-          <section>
-            <h2>
-              Editar producto
-            </h2>
+          <ProductForm
+            key={formKey}
+            initialValues={EMPTY_PRODUCT}
+            onSubmit={handleCreateProduct}
+            submitLabel="Crear producto"
+            loading={creatingProduct}
+            serverError={formError}
+          />
+        </section>
 
-            <p>
-              Editando:{" "}
-              <strong>
-                {editingProduct.name}
-              </strong>
-            </p>
+        {editingProduct && (
+          <section className="admin-panel admin-edit-panel">
+            <div className="admin-panel-header">
+              <div>
+                <span className="admin-panel-kicker">
+                  Edición
+                </span>
+
+                <h2>Editar producto</h2>
+
+                <p>
+                  Estás editando{" "}
+                  <strong>
+                    {editingProduct.name}
+                  </strong>
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="button-secondary admin-cancel-button"
+                onClick={handleCancelEdit}
+                disabled={updatingProduct}
+              >
+                Cancelar
+              </button>
+            </div>
 
             <ProductForm
               initialValues={editingProduct}
@@ -263,103 +320,171 @@ function Admin() {
               loading={updatingProduct}
               serverError={editError}
             />
-
-            <button
-              type="button"
-              onClick={handleCancelEdit}
-              disabled={updatingProduct}
-            >
-              Cancelar edición
-            </button>
           </section>
+        )}
+      </div>
 
-          <hr />
-        </>
-      )}
+      <section className="admin-products-section">
+        <div className="admin-products-heading">
+          <div>
+            <span className="admin-panel-kicker">
+              Catálogo
+            </span>
 
-      <section>
-        <h2>Productos</h2>
+            <h2>Productos</h2>
 
-        {error && <p>{error}</p>}
+            <p>
+              Gestiona el catálogo actual de la
+              tienda.
+            </p>
+          </div>
+
+          <span className="admin-products-count">
+            {products.length}{" "}
+            {products.length === 1
+              ? "producto"
+              : "productos"}
+          </span>
+        </div>
+
+        {error && (
+          <p className="error-message">
+            {error}
+          </p>
+        )}
 
         {loadingProducts ? (
-          <p>Cargando productos...</p>
-        ) : (
-          <>
+          <div className="admin-loading">
+            Cargando productos...
+          </div>
+        ) : products.length === 0 ? (
+          <div className="admin-empty">
+            <h3>No hay productos</h3>
+
             <p>
-              Productos encontrados:{" "}
-              {products.length}
+              Crea el primer producto utilizando
+              el formulario superior.
             </p>
+          </div>
+        ) : (
+          <div className="admin-products-table">
+            <div className="admin-products-table-header">
+              <span>Producto</span>
+              <span>Categoría</span>
+              <span>Precio</span>
+              <span>Stock</span>
+              <span>Acciones</span>
+            </div>
 
-            {products.length === 0 ? (
-              <p>
-                No hay productos disponibles.
-              </p>
-            ) : (
-              products.map((product) => (
-                <article key={product.id}>
-                  {product.imageUrl && (
-                    <img
-                      src={product.imageUrl}
-                      alt={product.name}
-                      width="120"
-                    />
-                  )}
-
-                  <h3>{product.name}</h3>
-
-                  <p>
-                    {product.description}
-                  </p>
-
-                  <p>
-                    Precio:{" "}
-                    {product.price.toFixed(2)} €
-                  </p>
-
-                  <p>
-                    Stock: {product.stock}
-                  </p>
-
-                  <p>
-                    Categoría:{" "}
-                    {product.category}
-                  </p>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleStartEdit(product)
-                    }
-                    disabled={
-                      deletingProductId ===
-                      product.id
-                    }
-                  >
-                    Editar
-                  </button>
-
-                  {" "}
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleDeleteProduct(product)
-                    }
-                    disabled={
-                      deletingProductId ===
-                      product.id
-                    }
-                  >
-                    {deletingProductId ===
+            <div className="admin-products-list">
+              {products.map((product) => (
+                <div
+                  key={product.id}
+                  className={
+                    editingProduct?.id ===
                     product.id
-                      ? "Eliminando..."
-                      : "Eliminar"}
-                  </button>
-                </article>
-              ))
-            )}
-          </>
+                      ? "admin-product-row admin-product-row-editing"
+                      : "admin-product-row"
+                  }
+                >
+                  <div className="admin-product-main">
+                    <div className="admin-product-image-wrapper">
+                      {product.imageUrl ? (
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
+                          className="admin-product-image"
+                        />
+                      ) : (
+                        <span className="admin-product-no-image">
+                          Sin imagen
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="admin-product-info">
+                      <h3>{product.name}</h3>
+
+                      <p>
+                        {product.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    className="admin-product-cell"
+                    data-label="Categoría"
+                  >
+                    <span className="admin-category">
+                      {product.category}
+                    </span>
+                  </div>
+
+                  <div
+                    className="admin-product-cell admin-product-price"
+                    data-label="Precio"
+                  >
+                    {Number(
+                      product.price
+                    ).toFixed(2)}{" "}
+                    €
+                  </div>
+
+                  <div
+                    className="admin-product-cell"
+                    data-label="Stock"
+                  >
+                    <span
+                      className={
+                        product.stock <= 0
+                          ? "admin-stock admin-stock-empty"
+                          : product.stock <= 5
+                            ? "admin-stock admin-stock-low"
+                            : "admin-stock"
+                      }
+                    >
+                      {product.stock}
+                    </span>
+                  </div>
+
+                  <div className="admin-product-actions">
+                    <button
+                      type="button"
+                      className="button-secondary"
+                      onClick={() =>
+                        handleStartEdit(product)
+                      }
+                      disabled={
+                        deletingProductId ===
+                        product.id
+                      }
+                    >
+                      Editar
+                    </button>
+
+                    <button
+                      type="button"
+                      className="button-danger"
+                      onClick={() =>
+                        handleDeleteProduct(
+                          product
+                        )
+                      }
+                      disabled={
+                        deletingProductId ===
+                        product.id
+                      }
+                    >
+                      {deletingProductId ===
+                      product.id
+                        ? "Eliminando..."
+                        : "Eliminar"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </section>
     </section>
