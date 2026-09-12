@@ -14,25 +14,30 @@ import Register from "./pages/Register";
 import Cart from "./pages/Cart";
 import Wishlist from "./pages/Wishlist";
 import Checkout from "./pages/Checkout";
+import CheckoutSuccess from "./pages/CheckoutSuccess";
 import Admin from "./pages/Admin";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Layout />,
+
     children: [
       {
         index: true,
         element: <Home />,
       },
+
       {
         path: "products",
         element: <Products />,
       },
+
       {
         path: "login",
         element: <Login />,
       },
+
       {
         path: "register",
         element: <Register />,
@@ -40,24 +45,33 @@ const router = createBrowserRouter([
 
       {
         element: <ProtectedRoute />,
+
         children: [
           {
             path: "wishlist",
             element: <Wishlist />,
           },
+
           {
             path: "cart",
             element: <Cart />,
           },
+
           {
             path: "checkout",
             element: <Checkout />,
+          },
+
+          {
+            path: "checkout/success",
+            element: <CheckoutSuccess />,
           },
         ],
       },
 
       {
         element: <AdminRoute />,
+
         children: [
           {
             path: "admin",
@@ -70,7 +84,9 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <RouterProvider router={router} />
+  );
 }
 
 export default App;
