@@ -1,5 +1,6 @@
 import supabase from "../config/database.js";
 import AppError from "../utils/appError.js";
+
 import {
   mapOrder,
 } from "../utils/orderMapper.js";
@@ -102,15 +103,17 @@ export const findOrderById = async ({
   userId,
   orderId,
 }) => {
-  const parsedUserId = parsePositiveId(
-    userId,
-    "usuario",
-  );
+  const parsedUserId =
+    parsePositiveId(
+      userId,
+      "usuario",
+    );
 
-  const parsedOrderId = parsePositiveId(
-    orderId,
-    "pedido",
-  );
+  const parsedOrderId =
+    parsePositiveId(
+      orderId,
+      "pedido",
+    );
 
   const {
     data: order,
@@ -139,13 +142,43 @@ export const findOrderById = async ({
   return mapOrder(order);
 };
 
+export const findOrderByCartId =
+  async (cartId) => {
+    const parsedCartId =
+      parsePositiveId(
+        cartId,
+        "carrito",
+      );
+
+    const {
+      data: order,
+      error,
+    } = await supabase
+      .from("orders")
+      .select(ORDER_COLUMNS)
+      .eq("cart_id", parsedCartId)
+      .maybeSingle();
+
+    if (error) {
+      throw new AppError(
+        "No se pudo consultar el pedido del carrito",
+        500,
+      );
+    }
+
+    return order
+      ? mapOrder(order)
+      : null;
+  };
+
 export const findOrdersByUser = async (
   userId,
 ) => {
-  const parsedUserId = parsePositiveId(
-    userId,
-    "usuario",
-  );
+  const parsedUserId =
+    parsePositiveId(
+      userId,
+      "usuario",
+    );
 
   const {
     data: orders,
@@ -165,45 +198,81 @@ export const findOrdersByUser = async (
     );
   }
 
-  return (orders || []).map(mapOrder);
+  return (orders || []).map(
+    mapOrder,
+  );
 };
 
-export const checkoutUserCart = async (
-  userId,
-) => {
-  const parsedUserId = parsePositiveId(
-    userId,
-    "usuario",
-  );
+export const checkoutUserCart =
+  async (userId) => {
+    const parsedUserId =
+      parsePositiveId(
+        userId,
+        "usuario",
+      );
 
-  const {
-    data: orderId,
-    error,
-  } = await supabase.rpc(
-    "checkout_cart",
-    {
-      p_user_id: parsedUserId,
-    },
-  );
-
-  if (error) {
-    throwCheckoutError(error);
-  }
-
-  const parsedOrderId = Number(orderId);
-
-  if (
-    !Number.isInteger(parsedOrderId) ||
-    parsedOrderId <= 0
-  ) {
-    throw new AppError(
-      "El checkout terminó sin devolver un pedido válido",
-      500,
+    const {
+      data: orderId,
+      error,
+    } = await supabase.rpc(
+      "checkout_cart",
+      {
+        p_user_id:
+          parsedUserId,
+      },
     );
-  }
 
-  return findOrderById({
-    userId: parsedUserId,
-    orderId: parsedOrderId,
-  });
-};
+    if (error) {
+      throwCheckoutError(error);
+    }
+
+    const parsedOrderId =
+      Number(orderId);
+
+    if (
+      !Number.isInteger(
+        parsedOrderId,
+      ) ||
+      parsedOrderId <= 0
+    ) {
+      throw new AppError(
+        "El checkout terminó sin devolver un pedido válido",
+        500,
+      );
+    }
+
+    return findOrderById({
+      userId: parsedUserId,
+      orderId: parsedOrderId,
+    });
+  };
+
+export const markOrderAsPaid =
+  async (orderId) => {
+    const parsedOrderId =
+      parsePositiveId(
+        orderId,
+        "pedido",
+      );
+
+    const {
+      data: order,
+      error,
+    } = await supabase
+      .from("orders")
+      .update({
+        status: "PAID",
+      })
+      .eq("id", parsedOrderId)
+      .select(ORDER_COLUMNS)
+      .single();
+
+    if (error) {
+      throw new AppError(
+        "No se pudo confirmar el pago del pedido",
+        500,
+      );
+    }
+
+    return mapOrder(order);
+  };

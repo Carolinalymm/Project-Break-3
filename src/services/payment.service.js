@@ -1,8 +1,15 @@
 import stripe from "../config/stripe.js";
 import AppError from "../utils/appError.js";
+
 import {
   findCartByUser,
 } from "./cart.service.js";
+
+import {
+  checkoutUserCart,
+  findOrderByCartId,
+  markOrderAsPaid,
+} from "./order.service.js";
 
 const getFrontendUrl = () => {
   const frontendUrl =
@@ -13,57 +20,83 @@ const getFrontendUrl = () => {
   return frontendUrl.replace(/\/+$/, "");
 };
 
+const ensureStripeConfigured = () => {
+  if (!stripe) {
+    throw new AppError(
+      "Stripe no está configurado correctamente",
+      503,
+    );
+  }
+};
+
+const parseMetadataId = (
+  value,
+  fieldName,
+) => {
+  const parsedValue = Number(value);
+
+  if (
+    !Number.isInteger(parsedValue) ||
+    parsedValue <= 0
+  ) {
+    throw new AppError(
+      `Stripe no devolvió un identificador válido de ${fieldName}`,
+      500,
+    );
+  }
+
+  return parsedValue;
+};
+
+const validateCartForPayment = (cart) => {
+  if (
+    !cart.items ||
+    cart.items.length === 0
+  ) {
+    throw new AppError(
+      "El carrito está vacío",
+      409,
+    );
+  }
+
+  for (const item of cart.items) {
+    if (!item.product) {
+      throw new AppError(
+        "Uno de los productos del carrito ya no existe",
+        409,
+      );
+    }
+
+    if (!item.product.isActive) {
+      throw new AppError(
+        `El producto "${item.product.name}" ya no está disponible`,
+        409,
+      );
+    }
+
+    if (
+      item.quantity >
+      item.product.stock
+    ) {
+      throw new AppError(
+        `Stock insuficiente para "${item.product.name}"`,
+        409,
+      );
+    }
+  }
+};
+
 export const createStripeCheckoutSession =
   async ({
     userId,
     customerEmail,
   }) => {
-    if (!stripe) {
-      throw new AppError(
-        "Stripe no está configurado correctamente",
-        503,
-      );
-    }
+    ensureStripeConfigured();
 
-    const cart = await findCartByUser(
-      userId,
-    );
+    const cart =
+      await findCartByUser(userId);
 
-    if (
-      !cart.items ||
-      cart.items.length === 0
-    ) {
-      throw new AppError(
-        "El carrito está vacío",
-        409,
-      );
-    }
-
-    for (const item of cart.items) {
-      if (!item.product) {
-        throw new AppError(
-          "Uno de los productos del carrito ya no existe",
-          409,
-        );
-      }
-
-      if (!item.product.isActive) {
-        throw new AppError(
-          `El producto "${item.product.name}" ya no está disponible`,
-          409,
-        );
-      }
-
-      if (
-        item.quantity >
-        item.product.stock
-      ) {
-        throw new AppError(
-          `Stock insuficiente para "${item.product.name}"`,
-          409,
-        );
-      }
-    }
+    validateCartForPayment(cart);
 
     const lineItems = cart.items.map(
       (item) => {
@@ -90,7 +123,8 @@ export const createStripeCheckoutSession =
           price_data: {
             currency: "eur",
 
-            product_data: productData,
+            product_data:
+              productData,
 
             unit_amount: Math.round(
               item.product.price * 100,
@@ -166,4 +200,121 @@ export const createStripeCheckoutSession =
         502,
       );
     }
+  };
+
+export const fulfillStripeCheckoutSession =
+  async (sessionId) => {
+    ensureStripeConfigured();
+
+    const session =
+      await stripe.checkout.sessions.retrieve(
+        sessionId,
+      );
+
+    if (
+      session.payment_status !== "paid"
+    ) {
+      return {
+        fulfilled: false,
+        paymentStatus:
+          session.payment_status,
+        order: null,
+      };
+    }
+
+    const userId = parseMetadataId(
+      session.metadata?.userId ||
+        session.client_reference_id,
+      "usuario",
+    );
+
+    const cartId = parseMetadataId(
+      session.metadata?.cartId,
+      "carrito",
+    );
+
+    /*
+     * Stripe puede enviar un mismo webhook
+     * más de una vez.
+     *
+     * Si este carrito ya generó un pedido,
+     * no volvemos a ejecutar checkout.
+     */
+    const existingOrder =
+      await findOrderByCartId(cartId);
+
+    if (existingOrder) {
+      if (
+        existingOrder.status === "PAID"
+      ) {
+        return {
+          fulfilled: true,
+          paymentStatus:
+            session.payment_status,
+          order: existingOrder,
+        };
+      }
+
+      const paidOrder =
+        await markOrderAsPaid(
+          existingOrder.id,
+        );
+
+      return {
+        fulfilled: true,
+        paymentStatus:
+          session.payment_status,
+        order: paidOrder,
+      };
+    }
+
+    const cart =
+      await findCartByUser(userId);
+
+    if (cart.id !== cartId) {
+      throw new AppError(
+        "El carrito pagado no coincide con el carrito activo",
+        409,
+      );
+    }
+
+    const stripeAmount =
+      Number(session.amount_total);
+
+    const cartAmount =
+      Math.round(
+        Number(cart.total) * 100,
+      );
+
+    if (
+      !Number.isInteger(stripeAmount) ||
+      stripeAmount !== cartAmount
+    ) {
+      throw new AppError(
+        "El importe pagado no coincide con el total del carrito",
+        409,
+      );
+    }
+
+    const order =
+      await checkoutUserCart(userId);
+
+    if (order.cartId !== cartId) {
+      throw new AppError(
+        "El pedido generado no coincide con el carrito pagado",
+        500,
+      );
+    }
+
+    const paidOrder =
+      await markOrderAsPaid(
+        order.id,
+      );
+
+    return {
+      fulfilled: true,
+      paymentStatus:
+        session.payment_status,
+      order: paidOrder,
+    };
   };

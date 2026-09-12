@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import swaggerUi from "swagger-ui-express";
 
 import swaggerSpecification from "./config/swagger.js";
+
 import healthRoutes from "./routes/health.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import meRoutes from "./routes/me.routes.js";
@@ -14,6 +15,7 @@ import cartRoutes from "./routes/cart.routes.js";
 import orderRoutes from "./routes/order.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
+import paymentWebhookRoutes from "./routes/paymentWebhook.routes.js";
 
 import notFound from "./middlewares/notFound.js";
 import errorHandler from "./middlewares/errorHandler.js";
@@ -30,14 +32,19 @@ app.disable("x-powered-by");
 
 const allowedOrigins = [
   "http://localhost:5173",
+
   process.env.FRONTEND_URL,
 
   ...(process.env.FRONTEND_URLS
-    ? process.env.FRONTEND_URLS.split(",")
+    ? process.env.FRONTEND_URLS.split(
+        ",",
+      )
     : []),
 ]
   .filter(Boolean)
-  .map((origin) => origin.trim());
+  .map((origin) =>
+    origin.trim(),
+  );
 
 app.use(
   cors({
@@ -74,6 +81,26 @@ app.use(
   }),
 );
 
+/*
+ * IMPORTANTE:
+ *
+ * Stripe necesita recibir el body
+ * original para comprobar la firma
+ * del webhook.
+ *
+ * Por eso esta ruta tiene que estar
+ * ANTES de express.json().
+ */
+app.use(
+  "/api/payments/webhook",
+
+  express.raw({
+    type: "application/json",
+  }),
+
+  paymentWebhookRoutes,
+);
+
 app.use(express.json());
 
 app.use(
@@ -89,81 +116,96 @@ app.get(
     "/favicon.ico",
     "/favicon.svg",
   ],
-  (req, res) => {
+  (
+    req,
+    res,
+  ) => {
     return res
       .status(204)
       .end();
   },
 );
 
-app.get("/", (req, res) => {
-  return sendSuccess(res, {
-    message:
-      "Bienvenida a Backend React Ready",
+app.get(
+  "/",
+  (
+    req,
+    res,
+  ) => {
+    return sendSuccess(
+      res,
+      {
+        message:
+          "Bienvenida a Backend React Ready",
 
-    data: {
-      documentation:
-        "/api/docs",
+        data: {
+          documentation:
+            "/api/docs",
 
-      openApiJson:
-        "/api/docs.json",
+          openApiJson:
+            "/api/docs.json",
 
-      health:
-        "/api/health",
+          health:
+            "/api/health",
 
-      databaseHealth:
-        "/api/health/database",
+          databaseHealth:
+            "/api/health/database",
 
-      mongoHealth:
-        "/api/health/mongodb",
+          mongoHealth:
+            "/api/health/mongodb",
 
-      register:
-        "/api/auth/register",
+          register:
+            "/api/auth/register",
 
-      login:
-        "/api/auth/login",
+          login:
+            "/api/auth/login",
 
-      logout:
-        "/api/auth/logout",
+          logout:
+            "/api/auth/logout",
 
-      currentUser:
-        "/api/me",
+          currentUser:
+            "/api/me",
 
-      products:
-        "/api/products",
+          products:
+            "/api/products",
 
-      productReviews:
-        "/api/products/:id/reviews",
+          productReviews:
+            "/api/products/:id/reviews",
 
-      reviews:
-        "/api/reviews/:reviewId",
+          reviews:
+            "/api/reviews/:reviewId",
 
-      wishlist:
-        "/api/wishlist",
+          wishlist:
+            "/api/wishlist",
 
-      cart:
-        "/api/cart",
+          cart:
+            "/api/cart",
 
-      cartItems:
-        "/api/cart/items",
+          cartItems:
+            "/api/cart/items",
 
-      checkout:
-        "/api/cart/checkout",
+          checkout:
+            "/api/cart/checkout",
 
-      stripeCheckout:
-        "/api/payments/create-checkout-session",
+          stripeCheckout:
+            "/api/payments/create-checkout-session",
 
-      orders:
-        "/api/orders",
+          stripeWebhook:
+            "/api/payments/webhook",
 
-      orderDetail:
-        "/api/orders/:orderId",
+          orders:
+            "/api/orders",
 
-      productImageUpload:
-        "/api/uploads/products",
-    },
-  });
-});
+          orderDetail:
+            "/api/orders/:orderId",
+
+          productImageUpload:
+            "/api/uploads/products",
+        },
+      },
+    );
+  },
+);
 
 app.get(
   "/api/docs.json",
