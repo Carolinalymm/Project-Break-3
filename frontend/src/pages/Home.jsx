@@ -12,14 +12,15 @@ function Home() {
           </span>
 
           <h1>
-            Encuentra lo que buscas.
-            <span> Compra de forma sencilla.</span>
+            Todo para disfrutar
+            <span> al máximo de tus partidas.</span>
           </h1>
 
           <p className="home-hero-description">
-            Descubre nuestro catálogo, guarda tus
-            productos favoritos y completa tus
-            compras de forma segura.
+            Descubre nuestra selección de videojuegos,
+            periféricos y accesorios gaming. Encuentra
+            mandos, teclados, altavoces, consolas,
+            juegos y mucho más en un único catálogo.
           </p>
 
           <div className="home-hero-actions">
@@ -27,7 +28,7 @@ function Home() {
               to="/products"
               className="home-primary-button"
             >
-              Ver productos
+              Explorar catálogo
             </Link>
 
             <Link
@@ -52,7 +53,7 @@ function Home() {
                 ✓
               </span>
 
-              <span>Wishlist</span>
+              <span>Productos gaming</span>
             </div>
 
             <div>
@@ -60,7 +61,7 @@ function Home() {
                 ✓
               </span>
 
-              <span>Compra sencilla</span>
+              <span>Wishlist personal</span>
             </div>
           </div>
         </div>
@@ -75,18 +76,18 @@ function Home() {
 
             <div className="home-visual-card-content">
               <span className="home-visual-category">
-                Destacado
+                Gaming
               </span>
 
               <h2>Project Break</h2>
 
               <p>
-                Tu tienda online
+                Videojuegos, periféricos y accesorios
               </p>
 
               <div className="home-visual-card-bottom">
                 <strong>
-                  Explorar catálogo
+                  Descubrir productos
                 </strong>
 
                 <span>→</span>
@@ -101,11 +102,11 @@ function Home() {
 
             <div>
               <strong>
-                Favoritos
+                Tus favoritos
               </strong>
 
               <span>
-                Guarda lo que te gusta
+                Guarda tus próximos imprescindibles
               </span>
             </div>
           </div>
@@ -117,11 +118,11 @@ function Home() {
 
             <div>
               <strong>
-                Pago seguro
+                Compra segura
               </strong>
 
               <span>
-                Protegido por Stripe
+                Pago protegido con Stripe
               </span>
             </div>
           </div>
@@ -131,18 +132,17 @@ function Home() {
       <section className="home-benefits">
         <div className="home-section-heading">
           <span className="home-eyebrow">
-            Una experiencia sencilla
+            Prepara tu setup
           </span>
 
           <h2>
-            Todo lo necesario para comprar
-            cómodamente
+            Todo lo que necesitas para jugar
           </h2>
 
           <p>
-            Navega por el catálogo, organiza tus
-            favoritos y gestiona tu compra desde
-            un único lugar.
+            Explora productos para completar tu setup,
+            ampliar tu colección de juegos o encontrar
+            ese accesorio que te falta.
           </p>
         </div>
 
@@ -153,17 +153,17 @@ function Home() {
             </div>
 
             <h3>
-              Catálogo de productos
+              Videojuegos y consolas
             </h3>
 
             <p>
-              Consulta los productos disponibles,
-              precios, categorías y stock de forma
-              clara.
+              Descubre juegos, consolas y productos
+              pensados para ampliar tu colección y
+              disfrutar de nuevas experiencias.
             </p>
 
             <Link to="/products">
-              Explorar productos →
+              Ver catálogo →
             </Link>
           </article>
 
@@ -173,16 +173,17 @@ function Home() {
             </div>
 
             <h3>
-              Guarda tus favoritos
+              Periféricos y accesorios
             </h3>
 
             <p>
-              Añade productos a tu wishlist y
-              vuelve a ellos cuando quieras.
+              Encuentra mandos, teclados, auriculares
+              y otros accesorios para completar tu
+              espacio gaming.
             </p>
 
             <Link to="/wishlist">
-              Ver wishlist →
+              Ver favoritos →
             </Link>
           </article>
 
@@ -192,13 +193,13 @@ function Home() {
             </div>
 
             <h3>
-              Checkout seguro
+              Compra rápida y segura
             </h3>
 
             <p>
-              Revisa tu pedido y completa el pago
-              mediante la plataforma segura de
-              Stripe.
+              Añade tus productos al carrito, revisa
+              tu pedido y completa el pago de forma
+              segura mediante Stripe.
             </p>
 
             <Link to="/cart">
@@ -211,17 +212,17 @@ function Home() {
       <section className="home-cta">
         <div>
           <span className="home-cta-eyebrow">
-            ¿Empezamos?
+            Mejora tu setup
           </span>
 
           <h2>
-            Descubre nuestro catálogo
+            Encuentra tu próximo imprescindible gaming
           </h2>
 
           <p>
-            Encuentra tus productos favoritos y
-            añádelos a tu carrito en unos pocos
-            pasos.
+            Explora videojuegos, periféricos y
+            accesorios disponibles y encuentra los
+            productos que mejor encajan contigo.
           </p>
         </div>
 
@@ -229,7 +230,7 @@ function Home() {
           to="/products"
           className="home-cta-button"
         >
-          Ver productos
+          Explorar productos
         </Link>
       </section>
     </section>

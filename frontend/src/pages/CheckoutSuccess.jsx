@@ -52,7 +52,7 @@ function CheckoutSuccess() {
           if (
             latestOrder &&
             latestOrder.status ===
-              "PAID"
+              "PAGADO"
           ) {
             if (!cancelled) {
               setOrder(
